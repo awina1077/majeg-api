@@ -1,25 +1,27 @@
-# --- Stage 1: Build Stage ---
-# Use a full Python image to handle complex builds.
+# --- Tahap 1: Tahap Build ---
+# Menggunakan image Python lengkap untuk instalasi paket.
 FROM python:3.13 AS build
 
 WORKDIR /app
 
-# Copy and install dependencies
+# Salin file requirements.txt
 COPY requirements.txt .
+
+# Instal semua dependensi
 RUN pip install --no-cache-dir -r requirements.txt
 
-# --- Stage 2: Final Stage ---
-# Use a much smaller, runtime-only Python image.
+# --- Tahap 2: Tahap Final ---
+# Menggunakan image Python yang lebih kecil (slim) sebagai image akhir.
 FROM python:3.13-slim
 
 WORKDIR /app
 
-# Copy only the installed packages from the build stage
+# Salin hanya paket yang sudah terinstal dari tahap build.
 COPY --from=build /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 
-# Copy your application code
+# Salin file proyek Anda ke dalam image.
 COPY . .
 
-# Set the port and command
+# Konfigurasi untuk Uvicorn
 EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
