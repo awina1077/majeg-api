@@ -1,27 +1,23 @@
-# --- Tahap 1: Tahap Build ---
-# Menggunakan image Python lengkap untuk instalasi paket.
-FROM python:3.13 AS build
+# Pakai Python versi 3.10
+FROM python:3.10
 
-WORKDIR /app
+# Set folder kerja
+WORKDIR /code
 
-# Salin file requirements.txt
-COPY requirements.txt .
+# Install library sistem yang dibutuhkan OpenCV/YOLO
+RUN apt-get update && apt-get install -y libgl1-mesa-glx
 
-# Instal semua dependensi
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy file requirements dulu (biar cache jalan)
+COPY ./requirements.txt /code/requirements.txt
 
-# --- Tahap 2: Tahap Final ---
-# Menggunakan image Python yang lebih kecil (slim) sebagai image akhir.
-FROM python:3.13-slim
+# Install library Python
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-WORKDIR /app
+# Copy semua file project kamu ke dalam server
+COPY . /code
 
-# Salin hanya paket yang sudah terinstal dari tahap build.
-COPY --from=build /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+# Beri izin akses file (Penting buat Hugging Face)
+RUN chmod -R 777 /code
 
-# Salin file proyek Anda ke dalam image.
-COPY . .
-
-# Konfigurasi untuk Uvicorn
-EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Jalankan aplikasi di port 7860 (Port wajib Hugging Face)
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
